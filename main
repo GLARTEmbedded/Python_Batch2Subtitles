@@ -1,0 +1,45 @@
+import os
+import whisper
+
+def batch_transcribe(input_folder, output_folder, model_name="medium"):
+    """
+    Batch transcribe all videos/audios in a folder to generate .srt subtitle files
+
+    Output:
+    Parameter:
+    - input_folder: The path where the video/audio file is stored
+    - output_folder: The path to generate the subtitle file
+
+    - model_name: Whisper model size (tiny, base, small, medium, large)
+    - Each file generates a .srt file with the same name, which is saved in the output_folder
+    """
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    model = whisper.load_model(model_name)
+    print(f"Loaded Whisper model '{model_name}'")
+
+    supported_ext = [".mp4", ".mp3", ".wav", ".m4a", ".flac", ".mov"]
+
+    files = [f for f in os.listdir(input_folder) if os.path.splitext(f)[1].lower() in supported_ext]
+    print(f"Found {len(files)} supported files in {input_folder}")
+
+    for filename in files:
+        input_path = os.path.join(input_folder, filename)
+        output_path = os.path.join(output_folder, os.path.splitext(filename)[0] + ".srt")
+
+        print(f"Transcribing '{filename}' ...")
+        result = model.transcribe(input_path)
+
+        with open(output_path, "w", encoding="utf-8") as srt_file:
+            srt_file.write(whisper.utils.write_srt(result["segments"]))
+
+        print(f"Saved subtitles to '{output_path}'")
+
+if __name__ == "__main__":
+   
+    input_folder = "./videos"
+    output_folder = "./subtitles"
+    model_name = "medium"
+
+    batch_transcribe(input_folder, output_folder, model_name)
